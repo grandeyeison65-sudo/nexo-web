@@ -7,32 +7,23 @@
    1. CONFIGURACIÓN GLOBAL
    ============================================ */
 const CONFIG = {
-  // URL base de tu sitio (sin slash al final)
   urlBase: 'https://grandeyeison65-sudo.github.io/nexo-web',
-
-  // Tu número de WhatsApp
   whatsapp: '50375605466',
-
-  // Mensaje de saludo común para todos los mensajes
   saludo: 'Buen día. 👋'
 };
 
 /* ============================================
-   2. DEEP LINKING (que los # abran la pestaña)
+   2. DEEP LINKING
    ============================================ */
 function procesarDeepLink() {
   const hash = window.location.hash.replace('#', '');
-
   if (!hash) return;
 
-  // Lista de pestañas válidas
   const tabsValidas = ['inicio', 'web', 'soporte', 'combo', 'proceso', 'portafolio', 'contacto'];
 
   if (tabsValidas.includes(hash)) {
-    // Si es una pestaña válida, abrirla
     const targetTab = document.getElementById(hash);
     if (targetTab) {
-      // Ocultar todas
       document.querySelectorAll('.tab-content').forEach(tab => {
         tab.classList.remove('active');
       });
@@ -41,14 +32,12 @@ function procesarDeepLink() {
         link.classList.remove('active');
       });
 
-      // Activar la del hash
       targetTab.classList.add('active');
 
       document.querySelectorAll('.nav__link').forEach(link => {
         if (link.dataset.tab === hash) link.classList.add('active');
       });
 
-      // Esperar un poco y hacer scroll suave si hay un elemento específico después
       setTimeout(() => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
         iniciarContadores();
@@ -58,7 +47,6 @@ function procesarDeepLink() {
   }
 }
 
-// Detectar cambios en el hash (por si el usuario navega con el link)
 window.addEventListener('hashchange', procesarDeepLink);
 
 /* ============================================
@@ -82,7 +70,6 @@ function switchTab(tabId) {
     if (link.dataset.tab === tabId) link.classList.add('active');
   });
 
-  // Actualizar el hash en la URL sin recargar
   history.replaceState(null, null, '#' + tabId);
 
   const nav = document.getElementById('nav');
@@ -250,45 +237,36 @@ function iniciarReveal() {
    9. SISTEMA DE WHATSAPP PERSONALIZADO
    ============================================ */
 function enviarMensajeWhatsApp(servicio, tab) {
-  // Limpiar caracteres raros
   const servicioLimpio = (servicio || '').trim();
   const tabLimpio = (tab || '').trim();
 
-  // Construir el link de referencia
   let linkRef = CONFIG.urlBase;
   if (tabLimpio) {
-    linkRef += '/' + tabLimpio;
+    linkRef += '/#' + tabLimpio;
   }
 
-  // Construir el mensaje
-  let mensaje = `${CONFIG.saludo}\n\n`;
+  let mensaje = CONFIG.saludo + '\n\n';
 
-  if (servicioLimpio && servicioLimpio !== 'General') {
-    mensaje += `Vi en su web el servicio de "${servicioLimpio}" y me interesa.\n\n`;
+  if (servicioLimpio && servicioLimpio !== 'Información general') {
+    mensaje += 'Vi en su web el servicio de "' + servicioLimpio + '" y me interesa.\n\n';
   } else {
-    mensaje += `Vengo desde su web Nexo Web.\n\n`;
+    mensaje += 'Vengo desde su web Nexo Web.\n\n';
   }
 
-  mensaje += `Link de referencia:\n${linkRef}\n\n`;
-  mensaje += `¿Me puede dar más información?`;
+  mensaje += 'Link de referencia:\n' + linkRef + '\n\n';
+  mensaje += '¿Me puede dar más información?';
 
-  // Codificar para URL
   const mensajeCodificado = encodeURIComponent(mensaje);
-
-  // Abrir WhatsApp
-  const url = `https://wa.me/${CONFIG.whatsapp}?text=${mensajeCodificado}`;
+  const url = 'https://wa.me/' + CONFIG.whatsapp + '?text=' + mensajeCodificado;
   window.open(url, '_blank');
 }
 
-/* ---------- Detectar clics en botones con data-servicio ---------- */
 document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('[data-servicio]').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.preventDefault();
-
       const servicio = btn.dataset.servicio;
-      const tab = btn.dataset.tabWhatsapp || btn.dataset.tab || '';
-
+      const tab = btn.dataset.tabWhatsapp || '';
       enviarMensajeWhatsApp(servicio, tab);
     });
   });
@@ -387,7 +365,7 @@ if (formResena) {
     renderizarResenas();
     calcularPromedio();
 
-    mostrarToast('Gracias por tu reseña. ⭐', 'ok');
+    mostrarToast('Gracias por tu reseña.', 'ok');
   });
 }
 
@@ -398,12 +376,7 @@ function renderizarResenas() {
   listaResenas.innerHTML = '';
 
   if (resenas.length === 0) {
-    listaResenas.innerHTML = `
-      <p class="resenas-vacio">
-        <i class="fa-regular fa-comment-dots"></i><br>
-        Aún no hay reseñas. ¡Sé el primero en opinar!
-      </p>
-    `;
+    listaResenas.innerHTML = '<p class="resenas-vacio"><i class="fa-regular fa-comment-dots"></i><br>Aún no hay reseñas. ¡Sé el primero en opinar!</p>';
     return;
   }
 
@@ -413,17 +386,7 @@ function renderizarResenas() {
 
     const div = document.createElement('div');
     div.className = 'resena';
-    div.innerHTML = `
-      <div class="resena__head">
-        <div class="resena__avatar">${inicial}</div>
-        <div class="resena__info">
-          <h5>${escapeHTML(resena.nombre)}</h5>
-          <div class="estrellas">${estrellasHTML}</div>
-        </div>
-      </div>
-      <p class="resena__texto">${escapeHTML(resena.comentario)}</p>
-      <span class="resena__fecha">${resena.fecha}</span>
-    `;
+    div.innerHTML = '<div class="resena__head"><div class="resena__avatar">' + inicial + '</div><div class="resena__info"><h5>' + escapeHTML(resena.nombre) + '</h5><div class="estrellas">' + estrellasHTML + '</div></div></div><p class="resena__texto">' + escapeHTML(resena.comentario) + '</p><span class="resena__fecha">' + resena.fecha + '</span>';
     listaResenas.appendChild(div);
   });
 }
@@ -460,7 +423,7 @@ function calcularPromedio() {
   const promedioRedondeado = promedio.toFixed(1);
 
   promedioNumero.textContent = promedioRedondeado;
-  promedioTotal.textContent = `Basado en ${total} reseña${total !== 1 ? 's' : ''}`;
+  promedioTotal.textContent = 'Basado en ' + total + ' reseña' + (total !== 1 ? 's' : '');
   promedioEstrellas.innerHTML = generarEstrellasHTML(Math.round(promedio));
 
   const conteo = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
@@ -478,13 +441,7 @@ function calcularPromedio() {
 function crearBarra(estrellas, porcentaje, cantidad = 0) {
   const div = document.createElement('div');
   div.className = 'barra';
-  div.innerHTML = `
-    <span>${estrellas} <i class="fa-solid fa-star" style="color:#facc15;font-size:0.75rem"></i></span>
-    <div class="barra__track">
-      <div class="barra__fill" style="width: 0%"></div>
-    </div>
-    <span>${Math.round(porcentaje)}%</span>
-  `;
+  div.innerHTML = '<span>' + estrellas + ' <i class="fa-solid fa-star" style="color:#facc15;font-size:0.75rem"></i></span><div class="barra__track"><div class="barra__fill" style="width: 0%"></div></div><span>' + Math.round(porcentaje) + '%</span>';
 
   setTimeout(() => {
     const fill = div.querySelector('.barra__fill');
@@ -505,50 +462,20 @@ function escapeHTML(texto) {
    11. RESEÑAS DE EJEMPLO
    ============================================ */
 (function cargarResenasEjemplo() {
-  const yaCargado = localStorage.getItem('nexoweb_ejemplo_cargado_v5');
+  const yaCargado = localStorage.getItem('nexoweb_ejemplo_v5');
 
   if (!yaCargado && resenas.length === 0) {
     const ejemplos = [
-      {
-        id: 1,
-        nombre: 'María Fernández',
-        puntuacion: 5,
-        comentario: 'Excelente servicio, mi catálogo web quedó increíble. Muy recomendados.',
-        fecha: '12 oct 2025'
-      },
-      {
-        id: 2,
-        nombre: 'Roberto Castillo',
-        puntuacion: 5,
-        comentario: 'Me hicieron la página de mi negocio y también le dieron mantenimiento a mis computadoras. Todo perfecto.',
-        fecha: '10 oct 2025'
-      },
-      {
-        id: 3,
-        nombre: 'Estudio Creativo SV',
-        puntuacion: 4,
-        comentario: 'Buen trabajo con la página. Solo tardaron un día más de lo previsto pero valió la pena.',
-        fecha: '08 oct 2025'
-      },
-      {
-        id: 4,
-        nombre: 'Carlos Mendoza',
-        puntuacion: 5,
-        comentario: 'El combo de web + soporte fue la mejor decisión. Ahorré bastante.',
-        fecha: '05 oct 2025'
-      },
-      {
-        id: 5,
-        nombre: 'Lucía Ramírez',
-        puntuacion: 4,
-        comentario: 'Muy profesionales. Me instalaron la red completa de la oficina sin problemas.',
-        fecha: '02 oct 2025'
-      }
+      { id: 1, nombre: 'María Fernández', puntuacion: 5, comentario: 'Excelente servicio, mi catálogo web quedó increíble. Muy recomendados.', fecha: '12 oct 2025' },
+      { id: 2, nombre: 'Roberto Castillo', puntuacion: 5, comentario: 'Me hicieron la página de mi negocio y también le dieron mantenimiento a mis computadoras.', fecha: '10 oct 2025' },
+      { id: 3, nombre: 'Estudio Creativo SV', puntuacion: 4, comentario: 'Buen trabajo con la página. Solo tardaron un día más de lo previsto pero valió la pena.', fecha: '08 oct 2025' },
+      { id: 4, nombre: 'Carlos Mendoza', puntuacion: 5, comentario: 'El combo de web + soporte fue la mejor decisión. Ahorré bastante.', fecha: '05 oct 2025' },
+      { id: 5, nombre: 'Lucía Ramírez', puntuacion: 4, comentario: 'Muy profesionales. Me instalaron la red completa de la oficina sin problemas.', fecha: '02 oct 2025' }
     ];
 
     resenas = ejemplos;
     localStorage.setItem(CLAVE_RESENAS, JSON.stringify(resenas));
-    localStorage.setItem('nexoweb_ejemplo_cargado_v5', 'true');
+    localStorage.setItem('nexoweb_ejemplo_v5', 'true');
   }
 })();
 
@@ -625,7 +552,7 @@ const CUPONES = {
 
     if (CUPONES[codigo]) {
       cuponAplicado = { codigo, ...CUPONES[codigo] };
-      mostrarToast(`Cupón ${codigo} aplicado: ${cuponAplicado.descuento}% de descuento`, 'ok');
+      mostrarToast('Cupón ' + codigo + ' aplicado: ' + cuponAplicado.descuento + '% de descuento', 'ok');
       inputCupon.style.borderColor = 'var(--verde)';
       btnAplicar.innerHTML = '<i class="fa-solid fa-check"></i> Aplicado';
       btnAplicar.style.background = 'var(--verde)';
@@ -656,22 +583,22 @@ const CUPONES = {
     }
     const total = subtotal - descuento;
 
-    let msg = `${CONFIG.saludo}\n\n`;
-    msg += `Hice una cotización en su calculadora de la web.\n\n`;
-    msg += `Servicio: ${servicioActual.nombre}\n`;
-    msg += `Subtotal: $${subtotal.toFixed(2)}\n`;
+    let msg = CONFIG.saludo + '\n\n';
+    msg += 'Hice una cotización en su calculadora de la web.\n\n';
+    msg += 'Servicio: ' + servicioActual.nombre + '\n';
+    msg += 'Subtotal: $' + subtotal.toFixed(2) + '\n';
 
     if (cuponAplicado) {
-      msg += `Cupón aplicado: ${cuponAplicado.codigo} (-${cuponAplicado.descuento}%)\n`;
-      msg += `Descuento: -$${descuento.toFixed(2)}\n`;
+      msg += 'Cupón aplicado: ' + cuponAplicado.codigo + ' (-' + cuponAplicado.descuento + '%)\n';
+      msg += 'Descuento: -$' + descuento.toFixed(2) + '\n';
     }
 
-    msg += `\nTotal estimado: $${total.toFixed(2)}\n\n`;
-    msg += `Link de referencia:\n${CONFIG.urlBase}/#combo\n\n`;
-    msg += `¿Me puede confirmar?`;
+    msg += '\nTotal estimado: $' + total.toFixed(2) + '\n\n';
+    msg += 'Link de referencia:\n' + CONFIG.urlBase + '/#combo\n\n';
+    msg += '¿Me puede confirmar?';
 
     const mensajeCodificado = encodeURIComponent(msg);
-    window.open(`https://wa.me/${CONFIG.whatsapp}?text=${mensajeCodificado}`, '_blank');
+    window.open('https://wa.me/' + CONFIG.whatsapp + '?text=' + mensajeCodificado, '_blank');
     mostrarToast('Abriendo WhatsApp...', 'ok');
   });
 
@@ -693,7 +620,7 @@ const CUPONES = {
         btn.innerHTML = '<i class="fa-solid fa-check"></i> ¡Copiado!';
         btn.classList.add('copiado');
 
-        mostrarToast(`Cupón ${codigo} copiado al portapapeles`, 'ok');
+        mostrarToast('Cupón ' + codigo + ' copiado al portapapeles', 'ok');
 
         const inputCalculadora = document.getElementById('calc-cupon-input');
         if (inputCalculadora) {
@@ -712,7 +639,7 @@ const CUPONES = {
         document.execCommand('copy');
         textarea.remove();
 
-        mostrarToast(`Cupón ${codigo} copiado`, 'ok');
+        mostrarToast('Cupón ' + codigo + ' copiado', 'ok');
 
         const inputCalculadora = document.getElementById('calc-cupon-input');
         if (inputCalculadora) inputCalculadora.value = codigo;
@@ -741,16 +668,16 @@ const CUPONES = {
       return;
     }
 
-    let msg = `${CONFIG.saludo}\n\n`;
-    msg += `Nuevo mensaje desde el formulario de la web.\n\n`;
-    msg += `Nombre: ${nombre}\n`;
-    msg += `Teléfono: ${telefono}\n`;
-    msg += `Servicio de interés: ${servicio}\n\n`;
-    msg += `Mensaje:\n${mensaje}\n\n`;
-    msg += `Link:\n${CONFIG.urlBase}/#contacto`;
+    let msg = CONFIG.saludo + '\n\n';
+    msg += 'Nuevo mensaje desde el formulario de la web.\n\n';
+    msg += 'Nombre: ' + nombre + '\n';
+    msg += 'Teléfono: ' + telefono + '\n';
+    msg += 'Servicio de interés: ' + servicio + '\n\n';
+    msg += 'Mensaje:\n' + mensaje + '\n\n';
+    msg += 'Link:\n' + CONFIG.urlBase + '/#contacto';
 
     const mensajeCodificado = encodeURIComponent(msg);
-    window.open(`https://wa.me/${CONFIG.whatsapp}?text=${mensajeCodificado}`, '_blank');
+    window.open('https://wa.me/' + CONFIG.whatsapp + '?text=' + mensajeCodificado, '_blank');
 
     mostrarToast('Mensaje enviado. Le contactaremos pronto.', 'ok');
 
@@ -784,31 +711,8 @@ function mostrarToast(mensaje, tipo = 'ok') {
 
   const toast = document.createElement('div');
   toast.className = 'nexo-toast';
-  toast.innerHTML = `<i class="fa-solid ${iconos[tipo]}"></i> <span>${mensaje}</span>`;
-  toast.style.cssText = `
-    position: fixed;
-    bottom: 100px;
-    left: 50%;
-    transform: translateX(-50%) translateY(30px);
-    background: ${colores[tipo]};
-    color: ${textos[tipo]};
-    padding: 15px 28px;
-    border-radius: 999px;
-    font-family: 'Outfit', sans-serif;
-    font-size: 0.92rem;
-    font-weight: 600;
-    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
-    z-index: 3000;
-    opacity: 0;
-    transition: opacity 0.35s ease, transform 0.35s ease;
-    pointer-events: none;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    max-width: 90vw;
-    text-align: center;
-    letter-spacing: 0.3px;
-  `;
+  toast.innerHTML = '<i class="fa-solid ' + iconos[tipo] + '"></i> <span>' + mensaje + '</span>';
+  toast.style.cssText = 'position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%) translateY(30px); background: ' + colores[tipo] + '; color: ' + textos[tipo] + '; padding: 15px 28px; border-radius: 999px; font-family: Outfit, sans-serif; font-size: 0.92rem; font-weight: 600; box-shadow: 0 15px 40px rgba(0,0,0,0.4); z-index: 3000; opacity: 0; transition: opacity 0.35s ease, transform 0.35s ease; pointer-events: none; display: flex; align-items: center; gap: 10px; max-width: 90vw; text-align: center; letter-spacing: 0.3px;';
 
   document.body.appendChild(toast);
 
@@ -843,7 +747,6 @@ document.addEventListener('DOMContentLoaded', () => {
   iniciarContadores();
   iniciarReveal();
 
-  // Procesar deep link si existe
   setTimeout(procesarDeepLink, 100);
 });
 
@@ -866,7 +769,7 @@ document.addEventListener('keydown', (e) => {
 
   if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
     e.preventDefault();
-    window.open(`https://wa.me/${CONFIG.whatsapp}`, '_blank');
+    window.open('https://wa.me/' + CONFIG.whatsapp, '_blank');
     mostrarToast('Abriendo WhatsApp...', 'info');
   }
 
@@ -876,13 +779,13 @@ document.addEventListener('keydown', (e) => {
     if (num >= 1 && num <= 7) {
       e.preventDefault();
       switchTab(tabs[num - 1]);
-      mostrarToast(`Pestaña: ${tabs[num - 1].toUpperCase()}`, 'info');
+      mostrarToast('Pestaña: ' + tabs[num - 1].toUpperCase(), 'info');
     }
   }
 });
 
 /* ============================================
-   18. SCROLL SUAVE EN ANCLAS INTERNAS
+   18. SCROLL SUAVE EN ANCLAS
    ============================================ */
 document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('a[href^="#"]').forEach(link => {
@@ -920,7 +823,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     cards.forEach((card, i) => {
       const factor = (i + 1) * 8;
-      card.style.transform = `translate(${x * factor}px, ${y * factor}px)`;
+      card.style.transform = 'translate(' + (x * factor) + 'px, ' + (y * factor) + 'px)';
     });
   });
 
