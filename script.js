@@ -1,42 +1,68 @@
 /* ============================================
-   NEXO WEB - LÓGICA PRINCIPAL v4
-   Modo claro/oscuro · Cupones · Calculadora
+   NEXO WEB - LÓGICA PRINCIPAL v5
+   Con deep linking y mensajes personalizados
    ============================================ */
 
 /* ============================================
-   1. SISTEMA DE TEMA CLARO/OSCURO
+   1. CONFIGURACIÓN GLOBAL
    ============================================ */
-(function inicializarTema() {
-  const themeToggle = document.getElementById('theme-toggle');
-  if (!themeToggle) return;
+const CONFIG = {
+  // URL base de tu sitio (sin slash al final)
+  urlBase: 'https://grandeyeison65-sudo.github.io/nexo-web',
 
-  // Recuperar tema guardado o usar oscuro por defecto
-  const temaGuardado = localStorage.getItem('nexo_tema') || 'dark';
-  document.body.setAttribute('data-theme', temaGuardado);
+  // Tu número de WhatsApp
+  whatsapp: '50375605466',
 
-  // Detectar preferencia del sistema si no hay nada guardado
-  if (!localStorage.getItem('nexo_tema')) {
-    const prefiereClaro = window.matchMedia('(prefers-color-scheme: light)').matches;
-    document.body.setAttribute('data-theme', prefiereClaro ? 'light' : 'dark');
+  // Mensaje de saludo común para todos los mensajes
+  saludo: 'Buen día. 👋'
+};
+
+/* ============================================
+   2. DEEP LINKING (que los # abran la pestaña)
+   ============================================ */
+function procesarDeepLink() {
+  const hash = window.location.hash.replace('#', '');
+
+  if (!hash) return;
+
+  // Lista de pestañas válidas
+  const tabsValidas = ['inicio', 'web', 'soporte', 'combo', 'proceso', 'portafolio', 'contacto'];
+
+  if (tabsValidas.includes(hash)) {
+    // Si es una pestaña válida, abrirla
+    const targetTab = document.getElementById(hash);
+    if (targetTab) {
+      // Ocultar todas
+      document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active');
+      });
+
+      document.querySelectorAll('.nav__link').forEach(link => {
+        link.classList.remove('active');
+      });
+
+      // Activar la del hash
+      targetTab.classList.add('active');
+
+      document.querySelectorAll('.nav__link').forEach(link => {
+        if (link.dataset.tab === hash) link.classList.add('active');
+      });
+
+      // Esperar un poco y hacer scroll suave si hay un elemento específico después
+      setTimeout(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        iniciarContadores();
+        iniciarReveal();
+      }, 200);
+    }
   }
+}
 
-  // Toggle al hacer clic
-  themeToggle.addEventListener('click', () => {
-    const temaActual = document.body.getAttribute('data-theme');
-    const nuevoTema = temaActual === 'dark' ? 'light' : 'dark';
-
-    document.body.setAttribute('data-theme', nuevoTema);
-    localStorage.setItem('nexo_tema', nuevoTema);
-
-    mostrarToast(
-      nuevoTema === 'dark' ? '🌙 Modo oscuro activado' : '☀️ Modo claro activado',
-      'info'
-    );
-  });
-})();
+// Detectar cambios en el hash (por si el usuario navega con el link)
+window.addEventListener('hashchange', procesarDeepLink);
 
 /* ============================================
-   2. SISTEMA DE PESTAÑAS
+   3. SISTEMA DE PESTAÑAS
    ============================================ */
 function switchTab(tabId) {
   const targetTab = document.getElementById(tabId);
@@ -55,6 +81,9 @@ function switchTab(tabId) {
   document.querySelectorAll('.nav__link').forEach(link => {
     if (link.dataset.tab === tabId) link.classList.add('active');
   });
+
+  // Actualizar el hash en la URL sin recargar
+  history.replaceState(null, null, '#' + tabId);
 
   const nav = document.getElementById('nav');
   const hamburger = document.getElementById('hamburger');
@@ -87,7 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /* ============================================
-   3. MENÚ HAMBURGUESA
+   4. MENÚ HAMBURGUESA
    ============================================ */
 const hamburger = document.getElementById('hamburger');
 const nav = document.getElementById('nav');
@@ -104,7 +133,7 @@ if (hamburger && nav) {
 }
 
 /* ============================================
-   4. HEADER + BACK TO TOP
+   5. HEADER CON SOMBRA + BACK TO TOP
    ============================================ */
 const header = document.getElementById('header');
 const backTop = document.getElementById('back-top');
@@ -130,7 +159,7 @@ if (backTop) {
 }
 
 /* ============================================
-   5. CONTADORES ANIMADOS
+   6. CONTADORES ANIMADOS
    ============================================ */
 function iniciarContadores() {
   const contadores = document.querySelectorAll('.contador');
@@ -160,10 +189,10 @@ function animarContador(elemento) {
   const actualizar = () => {
     actual += paso;
     if (actual < objetivo) {
-      elemento.textContent = Math.floor(actual).toLocaleString();
+      elemento.textContent = '+' + Math.floor(actual).toLocaleString();
       requestAnimationFrame(actualizar);
     } else {
-      elemento.textContent = objetivo.toLocaleString();
+      elemento.textContent = '+' + objetivo.toLocaleString();
     }
   };
 
@@ -171,7 +200,7 @@ function animarContador(elemento) {
 }
 
 /* ============================================
-   6. SCROLL REVEAL
+   7. SCROLL REVEAL
    ============================================ */
 function iniciarReveal() {
   const elementos = document.querySelectorAll(
@@ -197,7 +226,7 @@ function iniciarReveal() {
 }
 
 /* ============================================
-   7. FAQ ACORDEÓN
+   8. FAQ ACORDEÓN
    ============================================ */
 (function inicializarFAQ() {
   const items = document.querySelectorAll('.faq-item');
@@ -218,18 +247,321 @@ function iniciarReveal() {
 })();
 
 /* ============================================
-   8. SISTEMA DE CUPONES
+   9. SISTEMA DE WHATSAPP PERSONALIZADO
    ============================================ */
-const CUPONES = {
-  'NEXO25':    { descuento: 25, tipo: 'todo',    descripcion: '25% de descuento general' },
-  'WEB20':     { descuento: 20, tipo: 'web',     descripcion: '20% en planes web' },
-  'COMBO15':   { descuento: 15, tipo: 'combo',   descripcion: '15% en combos' },
-  'SOPORTE10': { descuento: 10, tipo: 'soporte', descripcion: '10% en soporte técnico' }
-};
+function enviarMensajeWhatsApp(servicio, tab) {
+  // Limpiar caracteres raros
+  const servicioLimpio = (servicio || '').trim();
+  const tabLimpio = (tab || '').trim();
+
+  // Construir el link de referencia
+  let linkRef = CONFIG.urlBase;
+  if (tabLimpio) {
+    linkRef += '/' + tabLimpio;
+  }
+
+  // Construir el mensaje
+  let mensaje = `${CONFIG.saludo}\n\n`;
+
+  if (servicioLimpio && servicioLimpio !== 'General') {
+    mensaje += `Vi en su web el servicio de "${servicioLimpio}" y me interesa.\n\n`;
+  } else {
+    mensaje += `Vengo desde su web Nexo Web.\n\n`;
+  }
+
+  mensaje += `Link de referencia:\n${linkRef}\n\n`;
+  mensaje += `¿Me puede dar más información?`;
+
+  // Codificar para URL
+  const mensajeCodificado = encodeURIComponent(mensaje);
+
+  // Abrir WhatsApp
+  const url = `https://wa.me/${CONFIG.whatsapp}?text=${mensajeCodificado}`;
+  window.open(url, '_blank');
+}
+
+/* ---------- Detectar clics en botones con data-servicio ---------- */
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('[data-servicio]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+
+      const servicio = btn.dataset.servicio;
+      const tab = btn.dataset.tabWhatsapp || btn.dataset.tab || '';
+
+      enviarMensajeWhatsApp(servicio, tab);
+    });
+  });
+});
+
+/* CONTINÚA EN PARTE 2 */
+/* ============================================
+   10. SISTEMA DE RESEÑAS
+   ============================================ */
+const CLAVE_RESENAS = 'nexoweb_resenas';
+let resenas = JSON.parse(localStorage.getItem(CLAVE_RESENAS)) || [];
+
+const formResena = document.getElementById('form-resena');
+const listaResenas = document.getElementById('resenas-lista');
+const promedioNumero = document.getElementById('promedio-numero');
+const promedioEstrellas = document.getElementById('promedio-estrellas');
+const promedioTotal = document.getElementById('promedio-total');
+const barrasEstrellas = document.getElementById('barras-estrellas');
+const estrellasInput = document.getElementById('estrellas-input');
+const inputPuntuacion = document.getElementById('puntuacion');
+
+/* ---------- 10.1 INPUT DE ESTRELLAS ---------- */
+let puntuacionSeleccionada = 0;
+
+if (estrellasInput) {
+  estrellasInput.querySelectorAll('i').forEach(estrella => {
+    estrella.addEventListener('mouseenter', () => {
+      pintarEstrellasInput(parseInt(estrella.dataset.valor));
+    });
+
+    estrella.addEventListener('click', () => {
+      puntuacionSeleccionada = parseInt(estrella.dataset.valor);
+      inputPuntuacion.value = puntuacionSeleccionada;
+      pintarEstrellasInput(puntuacionSeleccionada);
+    });
+  });
+
+  estrellasInput.addEventListener('mouseleave', () => {
+    pintarEstrellasInput(puntuacionSeleccionada);
+  });
+}
+
+function pintarEstrellasInput(valor) {
+  if (!estrellasInput) return;
+  estrellasInput.querySelectorAll('i').forEach((el, i) => {
+    if (i < valor) {
+      el.classList.remove('fa-regular');
+      el.classList.add('fa-solid');
+    } else {
+      el.classList.remove('fa-solid');
+      el.classList.add('fa-regular');
+    }
+  });
+}
+
+/* ---------- 10.2 GUARDAR RESEÑA ---------- */
+if (formResena) {
+  formResena.addEventListener('submit', (e) => {
+    e.preventDefault();
+
+    const nombre = document.getElementById('nombre').value.trim();
+    const comentario = document.getElementById('comentario').value.trim();
+    const puntuacion = parseInt(inputPuntuacion.value);
+
+    if (!nombre) {
+      mostrarToast('Por favor escribe tu nombre', 'error');
+      return;
+    }
+    if (puntuacion < 1 || puntuacion > 5) {
+      mostrarToast('Selecciona una puntuación de 1 a 5 estrellas', 'error');
+      return;
+    }
+    if (comentario.length < 5) {
+      mostrarToast('El comentario debe tener al menos 5 caracteres', 'error');
+      return;
+    }
+
+    const nuevaResena = {
+      id: Date.now(),
+      nombre: nombre,
+      puntuacion: puntuacion,
+      comentario: comentario,
+      fecha: new Date().toLocaleDateString('es-ES', {
+        day: '2-digit', month: 'short', year: 'numeric'
+      })
+    };
+
+    resenas.unshift(nuevaResena);
+    localStorage.setItem(CLAVE_RESENAS, JSON.stringify(resenas));
+
+    formResena.reset();
+    puntuacionSeleccionada = 0;
+    inputPuntuacion.value = 0;
+    pintarEstrellasInput(0);
+
+    renderizarResenas();
+    calcularPromedio();
+
+    mostrarToast('Gracias por tu reseña. ⭐', 'ok');
+  });
+}
+
+/* ---------- 10.3 MOSTRAR RESEÑAS ---------- */
+function renderizarResenas() {
+  if (!listaResenas) return;
+
+  listaResenas.innerHTML = '';
+
+  if (resenas.length === 0) {
+    listaResenas.innerHTML = `
+      <p class="resenas-vacio">
+        <i class="fa-regular fa-comment-dots"></i><br>
+        Aún no hay reseñas. ¡Sé el primero en opinar!
+      </p>
+    `;
+    return;
+  }
+
+  resenas.forEach(resena => {
+    const inicial = resena.nombre.charAt(0).toUpperCase();
+    const estrellasHTML = generarEstrellasHTML(resena.puntuacion);
+
+    const div = document.createElement('div');
+    div.className = 'resena';
+    div.innerHTML = `
+      <div class="resena__head">
+        <div class="resena__avatar">${inicial}</div>
+        <div class="resena__info">
+          <h5>${escapeHTML(resena.nombre)}</h5>
+          <div class="estrellas">${estrellasHTML}</div>
+        </div>
+      </div>
+      <p class="resena__texto">${escapeHTML(resena.comentario)}</p>
+      <span class="resena__fecha">${resena.fecha}</span>
+    `;
+    listaResenas.appendChild(div);
+  });
+}
+
+/* ---------- 10.4 ESTRELLAS HTML ---------- */
+function generarEstrellasHTML(puntuacion) {
+  let html = '';
+  for (let i = 1; i <= 5; i++) {
+    if (i <= puntuacion) html += '<i class="fa-solid fa-star"></i>';
+    else html += '<i class="fa-regular fa-star"></i>';
+  }
+  return html;
+}
+
+/* ---------- 10.5 PROMEDIO PONDERADO ---------- */
+function calcularPromedio() {
+  if (!promedioNumero) return;
+
+  const total = resenas.length;
+
+  if (total === 0) {
+    promedioNumero.textContent = '0.0';
+    promedioTotal.textContent = 'Basado en 0 reseñas';
+    promedioEstrellas.innerHTML = generarEstrellasHTML(0);
+    barrasEstrellas.innerHTML = '';
+    for (let i = 5; i >= 1; i--) {
+      barrasEstrellas.appendChild(crearBarra(i, 0));
+    }
+    return;
+  }
+
+  const suma = resenas.reduce((acc, r) => acc + r.puntuacion, 0);
+  const promedio = suma / total;
+  const promedioRedondeado = promedio.toFixed(1);
+
+  promedioNumero.textContent = promedioRedondeado;
+  promedioTotal.textContent = `Basado en ${total} reseña${total !== 1 ? 's' : ''}`;
+  promedioEstrellas.innerHTML = generarEstrellasHTML(Math.round(promedio));
+
+  const conteo = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+  resenas.forEach(r => conteo[r.puntuacion]++);
+
+  barrasEstrellas.innerHTML = '';
+  for (let i = 5; i >= 1; i--) {
+    const cantidad = conteo[i];
+    const porcentaje = (cantidad / total) * 100;
+    barrasEstrellas.appendChild(crearBarra(i, porcentaje, cantidad));
+  }
+}
+
+/* ---------- 10.6 BARRA PORCENTAJE ---------- */
+function crearBarra(estrellas, porcentaje, cantidad = 0) {
+  const div = document.createElement('div');
+  div.className = 'barra';
+  div.innerHTML = `
+    <span>${estrellas} <i class="fa-solid fa-star" style="color:#facc15;font-size:0.75rem"></i></span>
+    <div class="barra__track">
+      <div class="barra__fill" style="width: 0%"></div>
+    </div>
+    <span>${Math.round(porcentaje)}%</span>
+  `;
+
+  setTimeout(() => {
+    const fill = div.querySelector('.barra__fill');
+    if (fill) fill.style.width = porcentaje + '%';
+  }, 60);
+
+  return div;
+}
+
+/* ---------- 10.7 SEGURIDAD ---------- */
+function escapeHTML(texto) {
+  const div = document.createElement('div');
+  div.textContent = texto;
+  return div.innerHTML;
+}
 
 /* ============================================
-   9. CALCULADORA CON CUPONES
+   11. RESEÑAS DE EJEMPLO
    ============================================ */
+(function cargarResenasEjemplo() {
+  const yaCargado = localStorage.getItem('nexoweb_ejemplo_cargado_v5');
+
+  if (!yaCargado && resenas.length === 0) {
+    const ejemplos = [
+      {
+        id: 1,
+        nombre: 'María Fernández',
+        puntuacion: 5,
+        comentario: 'Excelente servicio, mi catálogo web quedó increíble. Muy recomendados.',
+        fecha: '12 oct 2025'
+      },
+      {
+        id: 2,
+        nombre: 'Roberto Castillo',
+        puntuacion: 5,
+        comentario: 'Me hicieron la página de mi negocio y también le dieron mantenimiento a mis computadoras. Todo perfecto.',
+        fecha: '10 oct 2025'
+      },
+      {
+        id: 3,
+        nombre: 'Estudio Creativo SV',
+        puntuacion: 4,
+        comentario: 'Buen trabajo con la página. Solo tardaron un día más de lo previsto pero valió la pena.',
+        fecha: '08 oct 2025'
+      },
+      {
+        id: 4,
+        nombre: 'Carlos Mendoza',
+        puntuacion: 5,
+        comentario: 'El combo de web + soporte fue la mejor decisión. Ahorré bastante.',
+        fecha: '05 oct 2025'
+      },
+      {
+        id: 5,
+        nombre: 'Lucía Ramírez',
+        puntuacion: 4,
+        comentario: 'Muy profesionales. Me instalaron la red completa de la oficina sin problemas.',
+        fecha: '02 oct 2025'
+      }
+    ];
+
+    resenas = ejemplos;
+    localStorage.setItem(CLAVE_RESENAS, JSON.stringify(resenas));
+    localStorage.setItem('nexoweb_ejemplo_cargado_v5', 'true');
+  }
+})();
+
+/* ============================================
+   12. CALCULADORA CON CUPONES
+   ============================================ */
+const CUPONES = {
+  'NEXO25':    { descuento: 25, tipo: 'todo' },
+  'WEB20':     { descuento: 20, tipo: 'web' },
+  'COMBO15':   { descuento: 15, tipo: 'combo' },
+  'SOPORTE10': { descuento: 10, tipo: 'soporte' }
+};
+
 (function inicializarCalculadora() {
   const select = document.getElementById('calc-servicio');
   const inputCupon = document.getElementById('calc-cupon-input');
@@ -245,12 +577,10 @@ const CUPONES = {
   let cuponAplicado = null;
   let servicioActual = { nombre: '', precio: 0 };
 
-  // Formatear moneda
   function formatear(valor) {
     return '$' + valor.toFixed(2);
   }
 
-  // Actualizar totales
   function actualizarTotal() {
     const subtotal = servicioActual.precio;
     let descuento = 0;
@@ -273,7 +603,6 @@ const CUPONES = {
     totalEl.textContent = formatear(total);
   }
 
-  // Cambio de servicio
   select.addEventListener('change', () => {
     const valor = select.value;
     if (!valor) {
@@ -285,7 +614,6 @@ const CUPONES = {
     actualizarTotal();
   });
 
-  // Aplicar cupón
   btnAplicar.addEventListener('click', () => {
     const codigo = inputCupon.value.trim().toUpperCase();
 
@@ -297,14 +625,14 @@ const CUPONES = {
 
     if (CUPONES[codigo]) {
       cuponAplicado = { codigo, ...CUPONES[codigo] };
-      mostrarToast(`🎟️ Cupón ${codigo} aplicado: ${cuponAplicado.descuento}% OFF`, 'ok');
+      mostrarToast(`Cupón ${codigo} aplicado: ${cuponAplicado.descuento}% de descuento`, 'ok');
       inputCupon.style.borderColor = 'var(--verde)';
       btnAplicar.innerHTML = '<i class="fa-solid fa-check"></i> Aplicado';
       btnAplicar.style.background = 'var(--verde)';
       actualizarTotal();
     } else {
       cuponAplicado = null;
-      mostrarToast('❌ Cupón no válido o expirado', 'error');
+      mostrarToast('Cupón no válido o expirado', 'error');
       inputCupon.style.borderColor = '#ef4444';
       actualizarTotal();
 
@@ -314,7 +642,6 @@ const CUPONES = {
     }
   });
 
-  // Enviar cotización por WhatsApp
   btnEnviar.addEventListener('click', () => {
     if (!servicioActual.nombre) {
       mostrarToast('Selecciona un servicio primero', 'error');
@@ -329,27 +656,30 @@ const CUPONES = {
     }
     const total = subtotal - descuento;
 
-    let msg = `*COTIZACIÓN - Nexo Web* 💼%0A%0A`;
-    msg += `🛠️ *Servicio:* ${servicioActual.nombre}%0A`;
-    msg += `💰 *Subtotal:* $${subtotal.toFixed(2)}%0A`;
+    let msg = `${CONFIG.saludo}\n\n`;
+    msg += `Hice una cotización en su calculadora de la web.\n\n`;
+    msg += `Servicio: ${servicioActual.nombre}\n`;
+    msg += `Subtotal: $${subtotal.toFixed(2)}\n`;
 
     if (cuponAplicado) {
-      msg += `🎟️ *Cupón aplicado:* ${cuponAplicado.codigo} (-${cuponAplicado.descuento}%)%0A`;
-      msg += `📉 *Descuento:* -$${descuento.toFixed(2)}%0A`;
+      msg += `Cupón aplicado: ${cuponAplicado.codigo} (-${cuponAplicado.descuento}%)\n`;
+      msg += `Descuento: -$${descuento.toFixed(2)}\n`;
     }
 
-    msg += `%0A✅ *Total a pagar:* $${total.toFixed(2)}%0A%0A`;
-    msg += `_Enviado desde la calculadora de Nexo Web_`;
+    msg += `\nTotal estimado: $${total.toFixed(2)}\n\n`;
+    msg += `Link de referencia:\n${CONFIG.urlBase}/#combo\n\n`;
+    msg += `¿Me puede confirmar?`;
 
-    window.open(`https://wa.me/50375605466?text=${msg}`, '_blank');
-    mostrarToast('¡Cotización enviada! 🚀', 'ok');
+    const mensajeCodificado = encodeURIComponent(msg);
+    window.open(`https://wa.me/${CONFIG.whatsapp}?text=${mensajeCodificado}`, '_blank');
+    mostrarToast('Abriendo WhatsApp...', 'ok');
   });
 
   actualizarTotal();
 })();
 
 /* ============================================
-   10. COPIAR CUPONES AL PORTAPAPELES
+   13. COPIAR CUPONES
    ============================================ */
 (function inicializarCopiarCupones() {
   document.querySelectorAll('[data-codigo]').forEach(btn => {
@@ -363,9 +693,8 @@ const CUPONES = {
         btn.innerHTML = '<i class="fa-solid fa-check"></i> ¡Copiado!';
         btn.classList.add('copiado');
 
-        mostrarToast(`📋 Cupón ${codigo} copiado al portapapeles`, 'ok');
+        mostrarToast(`Cupón ${codigo} copiado al portapapeles`, 'ok');
 
-        // Auto-llenar el input de la calculadora si existe
         const inputCalculadora = document.getElementById('calc-cupon-input');
         if (inputCalculadora) {
           inputCalculadora.value = codigo;
@@ -376,7 +705,6 @@ const CUPONES = {
           btn.classList.remove('copiado');
         }, 2000);
       } catch (err) {
-        // Fallback para navegadores sin clipboard API
         const textarea = document.createElement('textarea');
         textarea.value = codigo;
         document.body.appendChild(textarea);
@@ -384,7 +712,7 @@ const CUPONES = {
         document.execCommand('copy');
         textarea.remove();
 
-        mostrarToast(`📋 Cupón ${codigo} copiado`, 'ok');
+        mostrarToast(`Cupón ${codigo} copiado`, 'ok');
 
         const inputCalculadora = document.getElementById('calc-cupon-input');
         if (inputCalculadora) inputCalculadora.value = codigo;
@@ -394,7 +722,7 @@ const CUPONES = {
 })();
 
 /* ============================================
-   11. FORMULARIO DE CONTACTO
+   14. FORMULARIO DE CONTACTO
    ============================================ */
 (function inicializarFormContacto() {
   const form = document.getElementById('form-contacto');
@@ -413,29 +741,37 @@ const CUPONES = {
       return;
     }
 
-    let msg = `*NUEVO MENSAJE - Nexo Web* 🚀%0A%0A`;
-    msg += `👤 *Nombre:* ${encodeURIComponent(nombre)}%0A`;
-    msg += `📞 *Teléfono:* ${encodeURIComponent(telefono)}%0A`;
-    msg += `🛠️ *Servicio de interés:* ${encodeURIComponent(servicio)}%0A%0A`;
-    msg += `📝 *Mensaje:*%0A${encodeURIComponent(mensaje)}%0A%0A`;
-    msg += `_Enviado desde la web de Nexo Web_`;
+    let msg = `${CONFIG.saludo}\n\n`;
+    msg += `Nuevo mensaje desde el formulario de la web.\n\n`;
+    msg += `Nombre: ${nombre}\n`;
+    msg += `Teléfono: ${telefono}\n`;
+    msg += `Servicio de interés: ${servicio}\n\n`;
+    msg += `Mensaje:\n${mensaje}\n\n`;
+    msg += `Link:\n${CONFIG.urlBase}/#contacto`;
 
-    window.open(`https://wa.me/50375605466?text=${msg}`, '_blank');
+    const mensajeCodificado = encodeURIComponent(msg);
+    window.open(`https://wa.me/${CONFIG.whatsapp}?text=${mensajeCodificado}`, '_blank');
 
-    mostrarToast('¡Mensaje enviado! Te contactamos pronto 🚀', 'ok');
+    mostrarToast('Mensaje enviado. Le contactaremos pronto.', 'ok');
 
     setTimeout(() => form.reset(), 800);
   });
 })();
 
 /* ============================================
-   12. TOAST DE NOTIFICACIÓN
+   15. TOAST DE NOTIFICACIÓN
    ============================================ */
 function mostrarToast(mensaje, tipo = 'ok') {
   const colores = {
-    ok:    '#10b981',
+    ok:    '#b91c1c',
     error: '#ef4444',
-    info:  '#8b5cf6'
+    info:  '#06d6f5'
+  };
+
+  const textos = {
+    ok:    '#ffffff',
+    error: '#ffffff',
+    info:  '#0f172a'
   };
 
   const iconos = {
@@ -455,7 +791,7 @@ function mostrarToast(mensaje, tipo = 'ok') {
     left: 50%;
     transform: translateX(-50%) translateY(30px);
     background: ${colores[tipo]};
-    color: #ffffff;
+    color: ${textos[tipo]};
     padding: 15px 28px;
     border-radius: 999px;
     font-family: 'Outfit', sans-serif;
@@ -489,7 +825,7 @@ function mostrarToast(mensaje, tipo = 'ok') {
 }
 
 /* ============================================
-   13. INICIALIZACIÓN
+   16. INICIALIZACIÓN
    ============================================ */
 document.addEventListener('DOMContentLoaded', () => {
   const inicioTab = document.getElementById('inicio');
@@ -502,15 +838,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  renderizarResenas();
+  calcularPromedio();
   iniciarContadores();
   iniciarReveal();
+
+  // Procesar deep link si existe
+  setTimeout(procesarDeepLink, 100);
 });
 
 /* ============================================
-   14. ATAJOS DE TECLADO
+   17. ATAJOS DE TECLADO
    ============================================ */
 document.addEventListener('keydown', (e) => {
-  // Escape: cerrar menú móvil
   if (e.key === 'Escape') {
     if (nav && nav.classList.contains('open')) {
       nav.classList.remove('open');
@@ -524,21 +864,12 @@ document.addEventListener('keydown', (e) => {
     }
   }
 
-  // Ctrl+K → WhatsApp
   if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
     e.preventDefault();
-    window.open('https://wa.me/50375605466', '_blank');
+    window.open(`https://wa.me/${CONFIG.whatsapp}`, '_blank');
     mostrarToast('Abriendo WhatsApp...', 'info');
   }
 
-  // Ctrl+Shift+D → Cambiar tema
-  if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'd') {
-    e.preventDefault();
-    const themeToggle = document.getElementById('theme-toggle');
-    if (themeToggle) themeToggle.click();
-  }
-
-  // Ctrl+1-7 → Cambiar pestaña
   if ((e.ctrlKey || e.metaKey) && !e.shiftKey) {
     const tabs = ['inicio', 'web', 'soporte', 'combo', 'proceso', 'portafolio', 'contacto'];
     const num = parseInt(e.key);
@@ -551,7 +882,7 @@ document.addEventListener('keydown', (e) => {
 });
 
 /* ============================================
-   15. SCROLL SUAVE EN ANCLAS
+   18. SCROLL SUAVE EN ANCLAS INTERNAS
    ============================================ */
 document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('a[href^="#"]').forEach(link => {
@@ -559,6 +890,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const href = link.getAttribute('href');
       if (href === '#' || href.length < 2) return;
       if (link.dataset.tab) return;
+      if (link.dataset.servicio) return;
 
       const destino = document.querySelector(href);
       if (destino) {
@@ -572,7 +904,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /* ============================================
-   16. PARALLAX EN HERO CARDS
+   19. PARALLAX EN HERO CARDS
    ============================================ */
 (function inicializarParallax() {
   const cards = document.querySelectorAll('.hero__card');
@@ -598,24 +930,7 @@ document.addEventListener('DOMContentLoaded', () => {
 })();
 
 /* ============================================
-   17. PORTAFOLIO - BOTONES PRÓXIMAMENTE
-   ============================================ */
-(function inicializarPortafolio() {
-  document.querySelectorAll('[data-portafolio]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const proyecto = btn.dataset.portafolio;
-      const nombres = {
-        flash: 'Flash Express',
-        tech: 'TechNova',
-        nexo: 'Nexo Web'
-      };
-      mostrarToast(`🚀 El link de ${nombres[proyecto] || 'este proyecto'} estará disponible próximamente`, 'info');
-    });
-  });
-})();
-
-/* ============================================
-   18. AÑO AUTOMÁTICO EN FOOTER
+   20. AÑO AUTOMÁTICO EN FOOTER
    ============================================ */
 (function actualizarAnio() {
   const yearElements = document.querySelectorAll('.footer__bottom p');
@@ -626,9 +941,9 @@ document.addEventListener('DOMContentLoaded', () => {
 })();
 
 /* ============================================
-   19. SIN TRANSICIÓN AL CARGAR
+   21. SIN TRANSICIÓN AL CARGAR
    ============================================ */
-(function evitarFlashTema() {
+(function evitarFlash() {
   document.documentElement.classList.add('no-transition');
   window.addEventListener('load', () => {
     setTimeout(() => {
