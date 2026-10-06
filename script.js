@@ -11,7 +11,26 @@ const CONFIG = {
   whatsapp: '50375605466',
   saludo: 'Buen día. 👋'
 };
+/* ============================================
+   1.5 SISTEMA DE TEMA CLARO / OSCURO
+   ============================================ */
+(function inicializarTema() {
+  const themeToggle = document.getElementById('theme-toggle');
+  if (!themeToggle) return;
 
+  // Recuperar tema guardado o usar oscuro por defecto
+  const temaGuardado = localStorage.getItem('nexo_tema') || 'dark';
+  document.body.setAttribute('data-theme', temaGuardado);
+
+  // Toggle al hacer clic
+  themeToggle.addEventListener('click', () => {
+    const temaActual = document.body.getAttribute('data-theme');
+    const nuevoTema = temaActual === 'dark' ? 'light' : 'dark';
+
+    document.body.setAttribute('data-theme', nuevoTema);
+    localStorage.setItem('nexo_tema', nuevoTema);
+  });
+})();
 /* ============================================
    2. DEEP LINKING
    ============================================ */
